@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="theme-color" content="#064e3b">
+    <meta name="description" content="Hệ thống đăng ký và quản lý học sinh ở lại cuối tuần">
+    <title>Quản lý học sinh ở lại cuối tuần</title>
+
+    <style>
+        :root {
+            --primary: #047857;
+            --primary-dark: #064e3b;
+            --primary-light: #ecfdf5;
+            --navy: #0f172a;
+            --text: #1e293b;
+            --muted: #64748b;
+            --border: #e2e8f0;
+            --white: #ffffff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: "Segoe UI", Arial, sans-serif;
+            background: #f1f5f9;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .app-container {
+            width: 100%;
+            height: 100vh;
+            height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background: #f1f5f9;
+        }
+
+        /* HEADER */
+
+        .app-header {
+            flex-shrink: 0;
+            min-height: 76px;
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            color: white;
+            background: linear-gradient(
+                115deg,
+                #064e3b 0%,
+                #047857 55%,
+                #059669 100%
+            );
+            box-shadow: 0 3px 12px rgba(15, 23, 42, .12);
+            position: relative;
+            z-index: 3;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            min-width: 0;
+        }
+
+        .logo {
+            width: 48px;
+            height: 48px;
+            flex-shrink: 0;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255,255,255,.16);
+            border: 1px solid rgba(255,255,255,.25);
+            font-size: 25px;
+        }
+
+        .header-content {
+            min-width: 0;
+        }
+
+        .header-content h1 {
+            font-size: 19px;
+            font-weight: 750;
+            letter-spacing: .2px;
+            line-height: 1.4;
+            color: white;
+        }
+
+        .header-content p {
+            margin-top: 3px;
+            font-size: 12px;
+            color: rgba(255,255,255,.82);
+            letter-spacing: .3px;
+        }
+
+        .header-status {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 14px;
+            border-radius: 30px;
+            background: rgba(255,255,255,.13);
+            border: 1px solid rgba(255,255,255,.2);
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #86efac;
+            box-shadow: 0 0 8px #86efac;
+        }
+
+        /* MAIN CONTENT */
+
+        .app-main {
+            position: relative;
+            flex: 1;
+            min-height: 0;
+            overflow: hidden;
+            background: #f8fafc;
+        }
+
+        #appFrame {
+            display: block;
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: white;
+        }
+
+        /* LOADING SCREEN */
+
+        .loading {
+            position: absolute;
+            inset: 0;
+            z-index: 5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 25px;
+            text-align: center;
+            background:
+                radial-gradient(
+                    circle at top right,
+                    #d1fae5 0,
+                    transparent 35%
+                ),
+                linear-gradient(135deg, #f8fafc, #ecfdf5);
+            transition: opacity .4s ease, visibility .4s ease;
+        }
+
+        .loading.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .loading-icon {
+            width: 82px;
+            height: 82px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 24px;
+            color: white;
+            font-size: 39px;
+            background: linear-gradient(135deg, #047857, #10b981);
+            box-shadow: 0 12px 30px rgba(4,120,87,.2);
+        }
+
+        .spinner {
+            width: 43px;
+            height: 43px;
+            margin-bottom: 20px;
+            border: 4px solid #d1fae5;
+            border-top-color: #047857;
+            border-radius: 50%;
+            animation: spin .8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loading h2 {
+            font-size: 21px;
+            font-weight: 750;
+            color: #064e3b;
+            margin-bottom: 10px;
+        }
+
+        .loading-description {
+            max-width: 440px;
+            color: #64748b;
+            font-size: 14px;
+            line-height: 1.8;
+        }
+
+        .loading-note {
+            margin-top: 20px;
+            padding: 10px 18px;
+            border-radius: 30px;
+            color: #047857;
+            background: #d1fae5;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .open-link {
+            display: none;
+            margin-top: 22px;
+            padding: 12px 22px;
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            background: #047857;
+            font-size: 14px;
+            font-weight: 700;
+            transition: .2s;
+        }
+
+        .open-link:hover {
+            background: #065f46;
+            transform: translateY(-2px);
+        }
+
+        /* FOOTER */
+
+        .app-footer {
+            flex-shrink: 0;
+            min-height: 38px;
+            padding: 8px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            color: #64748b;
+            background: white;
+            border-top: 1px solid #e2e8f0;
+            font-size: 11px;
+        }
+
+        .footer-support {
+            color: #047857;
+            font-weight: 700;
+        }
+
+        /* TABLET */
+
+        @media (max-width: 768px) {
+            .app-header {
+                min-height: 66px;
+                padding: 9px 14px;
+            }
+
+            .logo {
+                width: 42px;
+                height: 42px;
+                font-size: 22px;
+                border-radius: 12px;
+            }
+
+            .header-content h1 {
+                font-size: 15px;
+            }
+
+            .header-content p {
+                font-size: 10px;
+            }
+
+            .header-status {
+                font-size: 10px;
+                padding: 7px 10px;
+            }
+
+            .app-footer {
+                min-height: 34px;
+                padding: 7px 12px;
+                font-size: 10px;
+            }
+        }
+
+        /* MOBILE */
+
+        @media (max-width: 480px) {
+            .app-header {
+                min-height: 62px;
+                padding: 8px 10px;
+                gap: 8px;
+            }
+
+            .header-left {
+                gap: 9px;
+            }
+
+            .logo {
+                width: 38px;
+                height: 38px;
+                border-radius: 10px;
+                font-size: 20px;
+            }
+
+            .header-content h1 {
+                font-size: 13px;
+                line-height: 1.35;
+            }
+
+            .header-content p {
+                font-size: 9px;
+                margin-top: 2px;
+            }
+
+            .header-status {
+                padding: 6px 8px;
+                font-size: 9px;
+                gap: 5px;
+            }
+
+            .status-dot {
+                width: 6px;
+                height: 6px;
+            }
+
+            .app-footer {
+                min-height: 31px;
+                padding: 6px 9px;
+                font-size: 9px;
+            }
+
+            .loading-icon {
+                width: 68px;
+                height: 68px;
+                font-size: 32px;
+                border-radius: 20px;
+            }
+
+            .loading h2 {
+                font-size: 17px;
+            }
+
+            .loading-description {
+                font-size: 12px;
+            }
+
+            .loading-note {
+                font-size: 10px;
+            }
+        }
+
+        @media (max-width: 350px) {
+            .header-status {
+                display: none;
+            }
+
+            .header-content h1 {
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="app-container">
+
+    <!-- HEADER -->
+    <header class="app-header">
+
+        <div class="header-left">
+
+            <div class="logo">🏫</div>
+
+            <div class="header-content">
+                <h1>QUẢN LÝ HỌC SINH BÁN TRÚ</h1>
+                <p>HỆ THỐNG ĐIỂM DANH HỌC SINH</p>
+            </div>
+
+        </div>
+
+        <div class="header-status">
+            <span class="status-dot"></span>
+            HỆ THỐNG TRỰC TUYẾN
+        </div>
+
+    </header>
+
+
+    <!-- MAIN -->
+    <main class="app-main">
+
+        <!-- LOADING -->
+        <div class="loading" id="loading">
+
+            <div class="loading-icon">🏫</div>
+
+            <div class="spinner" id="spinner"></div>
+
+            <h2>ĐIỂM DANH HỌC SINH BÁN TRÚ</h2>
+
+            <p class="loading-description">
+                Hệ thống đang kết nối và tải dữ liệu.<br>
+                Vui lòng chờ trong giây lát...
+            </p>
+
+            <div class="loading-note">
+                🔒 HỆ THỐNG QUẢN LÝ NỘI BỘ NHÀ TRƯỜNG
+            </div>
+
+            <a
+                class="open-link"
+                id="openLink"
+                href="#"
+                target="_blank"
+                rel="noopener noreferrer">
+                ↗ MỞ ỨNG DỤNG RIÊNG
+            </a>
+
+        </div>
+
+
+        <!-- GOOGLE APPS SCRIPT -->
+        <iframe
+            id="appFrame"
+            title="Hệ thống đăng ký học sinh ở lại cuối tuần"
+            src="https://script.google.com/a/~/macros/s/AKfycbxUc6Px51VEbNrqhwaVHh5pVuKF6Z_ZHzwkDdqVvKplYdJn7v1SSPdGhiVRfFNiRi5Y7w/exec"
+            allow="clipboard-read; clipboard-write"
+            referrerpolicy="strict-origin-when-cross-origin">
+        </iframe>
+
+    </main>
+
+
+    <!-- FOOTER -->
+    <footer class="app-footer">
+
+        <span>© 2026 – HỆ THỐNG QUẢN LÝ HỌC SINH</span>
+
+        <span class="footer-support">
+            Hỗ trợ kỹ thuật: Mr. Hùng – 0984 246 993
+        </span>
+
+    </footer>
+
+</div>
+
+
+<script>
+(function () {
+
+    const frame = document.getElementById("appFrame");
+    const loading = document.getElementById("loading");
+    const spinner = document.getElementById("spinner");
+    const openLink = document.getElementById("openLink");
+
+    let loaded = false;
+
+    // Đường dẫn mở ứng dụng riêng
+    openLink.href = frame.src;
+
+    // Khi iframe phát sinh sự kiện load
+    frame.addEventListener("load", function () {
+
+        loaded = true;
+
+        setTimeout(function () {
+            loading.classList.add("hidden");
+        }, 500);
+
+    });
+
+    // Nếu tải quá lâu, hiển thị nút mở riêng
+    setTimeout(function () {
+
+        if (!loaded) {
+
+            spinner.style.display = "none";
+
+            openLink.style.display = "inline-block";
+
+            document.querySelector(".loading-description").innerHTML =
+                "Ứng dụng đang tải lâu hơn dự kiến.<br>" +
+                "Thầy cô có thể mở ứng dụng bằng nút bên dưới.";
+
+        }
+
+    }, 15000);
+
+})();
+</script>
+
+</body>
+</html>
