@@ -136,7 +136,15 @@
             background: #f8fafc;
         }
 
-        /* APP LAUNCH SCREEN */
+        #appFrame {
+            display: block;
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: white;
+        }
+
+        /* LOADING SCREEN */
 
         .loading {
             position: absolute;
@@ -155,12 +163,14 @@
                     transparent 35%
                 ),
                 linear-gradient(135deg, #f8fafc, #ecfdf5);
+            transition: opacity .4s ease, visibility .4s ease;
         }
 
-        [hidden] { display: none !important; }
-        #embedded-app { height: 100%; display: flex; flex-direction: column; }
-        #embedded-app p { padding: 8px 12px; }
-        #attendance-frame { flex: 1; min-height: 0; width: 100%; border: 0; }
+        .loading.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
 
         .loading-icon {
             width: 82px;
@@ -174,6 +184,22 @@
             font-size: 39px;
             background: linear-gradient(135deg, #047857, #10b981);
             box-shadow: 0 12px 30px rgba(4,120,87,.2);
+        }
+
+        .spinner {
+            width: 43px;
+            height: 43px;
+            margin-bottom: 20px;
+            border: 4px solid #d1fae5;
+            border-top-color: #047857;
+            border-radius: 50%;
+            animation: spin .8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         .loading h2 {
@@ -201,7 +227,7 @@
         }
 
         .open-link {
-            display: inline-block;
+            display: none;
             margin-top: 22px;
             padding: 12px 22px;
             color: white;
@@ -365,8 +391,8 @@
             <div class="logo">🏫</div>
 
             <div class="header-content">
-                <h1>QUẢN LÝ HỌC SINH BÁN TRÚ</h1>
-                <p>HỆ THỐNG ĐIỂM DANH HỌC SINH</p>
+                <h1>QUẢN LÝ HỌC SINH Ở LẠI CUỐI TUẦN</h1>
+                <p>HỆ THỐNG ĐĂNG KÝ VÀ ĐIỂM DANH HỌC SINH</p>
             </div>
 
         </div>
@@ -382,35 +408,45 @@
     <!-- MAIN -->
     <main class="app-main">
 
-        <!-- APP LAUNCH SCREEN -->
-        <div class="loading">
+        <!-- LOADING -->
+        <div class="loading" id="loading">
 
             <div class="loading-icon">🏫</div>
 
-            <h2>ĐIỂM DANH HỌC SINH BÁN TRÚ</h2>
+            <div class="spinner" id="spinner"></div>
+
+            <h2>ĐIỂM DANH HỌC SINH Ở LẠI CUỐI TUẦN</h2>
 
             <p class="loading-description">
-                Bấm nút bên dưới để mở ứng dụng điểm danh.
+                Hệ thống đang kết nối và tải dữ liệu.<br>
+                Vui lòng chờ trong giây lát...
             </p>
 
             <div class="loading-note">
                 🔒 HỆ THỐNG QUẢN LÝ NỘI BỘ NHÀ TRƯỜNG
             </div>
 
-            <button type="button" class="open-link" id="open-app">
-                MỞ ỨNG DỤNG ĐIỂM DANH
-            </button>
+            <a
+                class="open-link"
+                id="openLink"
+                href="#"
+                target="_blank"
+                rel="noopener noreferrer">
+                ↗ MỞ ỨNG DỤNG RIÊNG
+            </a>
 
         </div>
 
 
-        <section id="embedded-app" hidden>
-            <p id="app-status" role="status">Đang tải Sổ trực bán trú…</p>
-            <iframe id="attendance-frame" title="Sổ trực bán trú"
-                sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-downloads allow-modals"
-                allow="clipboard-write; web-share"></iframe>
-            <p><a id="direct-app" target="_blank" rel="noopener noreferrer">Mở trực tiếp trong tab mới</a></p>
-        </section>
+        <!-- GOOGLE APPS SCRIPT -->
+        <iframe
+            id="appFrame"
+            title="Hệ thống đăng ký học sinh ở lại cuối tuần"
+            src="https://script.google.com/a/~/macros/s/AKfycbzZdJxYbS9EElRs9qteAI87WNQxBGOnGeV51DGNnvnihZTOl91C2cQ7RQaaPCgAf3cp/exec"
+            allow="clipboard-read; clipboard-write"
+            referrerpolicy="strict-origin-when-cross-origin">
+        </iframe>
+
     </main>
 
 
@@ -429,31 +465,48 @@
 
 
 <script>
-const execUrl = 'https://script.google.com/a/~/macros/s/AKfycbyRv037pXJQHLRJTwzbLhJ2a2Sbf1DM4RPYxHVSqTLRhPt57S-R7NWFdPMYRW70REbB8g/exec';
-const launch = document.getElementById('open-app');
-const panel = document.getElementById('embedded-app');
-const frame = document.getElementById('attendance-frame');
-const message = document.getElementById('app-status');
-document.getElementById('direct-app').href = execUrl;
-let timer;
-window.addEventListener('message', event => {
-    if (panel.hidden || !/^https:\/\/[a-z0-9-]+-script\.googleusercontent\.com$/.test(event.origin)) return;
-    if (event.data === 'bantru:request') event.source.postMessage('bantru:authorized', event.origin);
-    if (event.data === 'bantru:ready') {
-        clearTimeout(timer);
-        message.hidden = true;
-    }
-});
-launch.addEventListener('click', () => {
-    const url = new URL(execUrl);
-    url.searchParams.set('embed', 'vercel');
-    launch.closest('.loading').hidden = true;
-    panel.hidden = false;
-    timer = setTimeout(() => {
-        message.textContent = 'Khung chưa phản hồi. Hãy kiểm tra phiên bản Apps Script và tên miền cấu hình hoặc mở trực tiếp trong tab mới.';
+(function () {
+
+    const frame = document.getElementById("appFrame");
+    const loading = document.getElementById("loading");
+    const spinner = document.getElementById("spinner");
+    const openLink = document.getElementById("openLink");
+
+    let loaded = false;
+
+    // Đường dẫn mở ứng dụng riêng
+    openLink.href = frame.src;
+
+    // Khi iframe phát sinh sự kiện load
+    frame.addEventListener("load", function () {
+
+        loaded = true;
+
+        setTimeout(function () {
+            loading.classList.add("hidden");
+        }, 500);
+
+    });
+
+    // Nếu tải quá lâu, hiển thị nút mở riêng
+    setTimeout(function () {
+
+        if (!loaded) {
+
+            spinner.style.display = "none";
+
+            openLink.style.display = "inline-block";
+
+            document.querySelector(".loading-description").innerHTML =
+                "Ứng dụng đang tải lâu hơn dự kiến.<br>" +
+                "Thầy cô có thể mở ứng dụng bằng nút bên dưới.";
+
+        }
+
     }, 15000);
-    frame.src = url.href;
-});
+
+})();
 </script>
+
 </body>
 </html>
