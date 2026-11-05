@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <meta name="theme-color" content="#064e3b">
     <meta name="description" content="Hệ thống đăng ký và quản lý học sinh ở lại cuối tuần">
-    <title>Quản lý học sinh ở lại cuối tuần</title>
+    <title>Sổ trực bán trú</title>
 
     <style>
         :root {
@@ -391,8 +391,8 @@
             <div class="logo">🏫</div>
 
             <div class="header-content">
-                <h1>QUẢN LÝ HỌC SINH Ở LẠI CUỐI TUẦN</h1>
-                <p>HỆ THỐNG ĐĂNG KÝ VÀ ĐIỂM DANH HỌC SINH</p>
+                <h1>QUẢN LÝ HỌC SINH BÁN TRÚ</h1>
+                <p>SỔ TRỰC BÁN TRÚ</p>
             </div>
 
         </div>
@@ -415,9 +415,9 @@
 
             <div class="spinner" id="spinner"></div>
 
-            <h2>ĐIỂM DANH HỌC SINH Ở LẠI CUỐI TUẦN</h2>
+            <h2>ĐIỂM DANH HỌC SINH BÁN TRÚ</h2>
 
-            <p class="loading-description">
+            <p class="loading-description" id="appStatus" role="status">
                 Hệ thống đang kết nối và tải dữ liệu.<br>
                 Vui lòng chờ trong giây lát...
             </p>
@@ -432,7 +432,7 @@
                 href="#"
                 target="_blank"
                 rel="noopener noreferrer">
-                ↗ MỞ ỨNG DỤNG RIÊNG
+                ↗ MỞ TRỰC TIẾP TRONG TAB MỚI
             </a>
 
         </div>
@@ -441,9 +441,9 @@
         <!-- GOOGLE APPS SCRIPT -->
         <iframe
             id="appFrame"
-            title="Hệ thống đăng ký học sinh ở lại cuối tuần"
-            src="https://script.google.com/a/~/macros/s/AKfycbyLW-i9FQBTNMDQ0rIdXkO4H_9q5yDGXTqTJ2U9LZIKiK49bgGiznOlblXQ6uGSu_Up1w/exec"
-            allow="clipboard-read; clipboard-write"
+            title="Sổ trực bán trú"
+            sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-downloads allow-modals"
+            allow="clipboard-write; web-share"
             referrerpolicy="strict-origin-when-cross-origin">
         </iframe>
 
@@ -465,47 +465,32 @@
 
 
 <script>
-(function () {
+const execUrl = 'https://script.google.com/a/~/macros/s/AKfycbyLW-i9FQBTNMDQ0rIdXkO4H_9q5yDGXTqTJ2U9LZIKiK49bgGiznOlblXQ6uGSu_Up1w/exec';
+const frame = document.getElementById('appFrame');
+const message = document.getElementById('appStatus');
+const direct = document.getElementById('openLink');
+direct.href = execUrl;
+const url = new URL(execUrl);
+url.searchParams.set('embed', 'vercel');
 
-    const frame = document.getElementById("appFrame");
-    const loading = document.getElementById("loading");
-    const spinner = document.getElementById("spinner");
-    const openLink = document.getElementById("openLink");
+const timer = setTimeout(() => {
+    message.textContent = 'Ứng dụng chưa phản hồi trong khung.';
+    document.getElementById('spinner').hidden = true;
+    direct.style.display = 'inline-block';
+}, 20000);
 
-    let loaded = false;
-
-    // Đường dẫn mở ứng dụng riêng
-    openLink.href = frame.src;
-
-    // Khi iframe phát sinh sự kiện load
-    frame.addEventListener("load", function () {
-
-        loaded = true;
-
-        setTimeout(function () {
-            loading.classList.add("hidden");
-        }, 500);
-
-    });
-
-    // Nếu tải quá lâu, hiển thị nút mở riêng
-    setTimeout(function () {
-
-        if (!loaded) {
-
-            spinner.style.display = "none";
-
-            openLink.style.display = "inline-block";
-
-            document.querySelector(".loading-description").innerHTML =
-                "Ứng dụng đang tải lâu hơn dự kiến.<br>" +
-                "Thầy cô có thể mở ứng dụng bằng nút bên dưới.";
-
-        }
-
-    }, 15000);
-
-})();
+window.addEventListener('message', event => {
+    if (!/^https:\/\/[a-z0-9-]+-script\.googleusercontent\.com$/.test(event.origin)) return;
+    let source = event.source;
+    while (source && source !== window && source !== frame.contentWindow) source = source.parent;
+    if (source !== frame.contentWindow) return;
+    if (event.data === 'bantru:request') event.source.postMessage('bantru:authorized', event.origin);
+    if (event.data === 'bantru:ready') {
+        clearTimeout(timer);
+        document.getElementById('loading').classList.add('hidden');
+    }
+});
+frame.src = url.href;
 </script>
 
 </body>
