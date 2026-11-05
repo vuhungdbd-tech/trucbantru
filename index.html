@@ -397,15 +397,20 @@
                 🔒 HỆ THỐNG QUẢN LÝ NỘI BỘ NHÀ TRƯỜNG
             </div>
 
-            <a
-                class="open-link"
-                href="https://script.google.com/a/~/macros/s/AKfycbwlEZSqzHK0KvoMI7b5FYlfZ1dkFibrtJa6oeRADmQnqzF19787fTH2N34WHnh4T9U0/exec">
+            <button type="button" class="open-link" id="open-app">
                 MỞ ỨNG DỤNG ĐIỂM DANH
-            </a>
+            </button>
 
         </div>
 
 
+        <section id="embedded-app" hidden>
+            <p id="app-status" role="status">Đang tải Sổ trực bán trú…</p>
+            <iframe id="attendance-frame" title="Sổ trực bán trú"
+                sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-downloads allow-modals"
+                allow="clipboard-write; web-share"></iframe>
+            <p><a id="direct-app" target="_blank" rel="noopener noreferrer">Mở trực tiếp trong tab mới</a></p>
+        </section>
     </main>
 
 
@@ -423,5 +428,32 @@
 </div>
 
 
+<script>
+const execUrl = 'https://script.google.com/a/~/macros/s/AKfycbwlEZSqzHK0KvoMI7b5FYlfZ1dkFibrtJa6oeRADmQnqzF19787fTH2N34WHnh4T9U0/exec';
+const launch = document.getElementById('open-app');
+const panel = document.getElementById('embedded-app');
+const frame = document.getElementById('attendance-frame');
+const message = document.getElementById('app-status');
+document.getElementById('direct-app').href = execUrl;
+let timer;
+window.addEventListener('message', event => {
+    if (panel.hidden || !/^https:\/\/[a-z0-9-]+-script\.googleusercontent\.com$/.test(event.origin)) return;
+    if (event.data === 'bantru:request') event.source.postMessage('bantru:authorized', event.origin);
+    if (event.data === 'bantru:ready') {
+        clearTimeout(timer);
+        message.hidden = true;
+    }
+});
+launch.addEventListener('click', () => {
+    const url = new URL(execUrl);
+    url.searchParams.set('embed', 'vercel');
+    launch.closest('.loading').hidden = true;
+    panel.hidden = false;
+    timer = setTimeout(() => {
+        message.textContent = 'Khung chưa phản hồi. Hãy kiểm tra phiên bản Apps Script và tên miền cấu hình hoặc mở trực tiếp trong tab mới.';
+    }, 15000);
+    frame.src = url.href;
+});
+</script>
 </body>
 </html>
